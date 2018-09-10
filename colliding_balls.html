@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Collision Detection based-on Distance</title>
+	<link rel='stylesheet' type='text/css' href='style.css'>
+	<script src='ball.js'></script>
+	<script src='utils.js'></script>
+	<script>
+		window.addEventListener('load', documentLoaded);
+		function documentLoaded(e){
+			var myCanvas = document.getElementById('myCanvas');
+			if(myCanvas && myCanvas.getContext){
+				var myContext = myCanvas.getContext('2d'),
+					myBalls = [],
+					numBalls = 15,
+					spring = 0.1,
+					bouncing = -1,
+					gravity = 0.01;
+				
+				for(var i = 0; i < numBalls; i++){
+					var myBall = new Ball(Math.random() * 40 + 20, '#'+Math.floor(Math.random()*16777215).toString(16));
+					myBall.x = Math.random() * myCanvas.width/2;
+					myBall.y = Math.random() * myCanvas.height/2;
+					myBall.vx = Math.random() * 6 - 3;
+					myBall.vy = Math.random() * 6 - 3;
+					myBalls.push(myBall);
+				}
+				
+				function move(myBall){
+					myBall.vy += gravity;
+					myBall.x += myBall.vx;
+					myBall.y += myBall.vy;
+					
+					if(myBall.x - myBall.radius < 0){
+						myBall.x = myBall.radius;
+						myBall.vx *= bouncing;
+					}else if(myBall.x + myBall.radius > myCanvas.width){
+						myBall.x = myCanvas.width - myBall.radius;
+						myBall.vx *= bouncing;
+					}
+					if(myBall.y - myBall.radius < 0){
+						myBall.y = myBall.radius;
+						myBall.vy *= bouncing;
+					}else if(myBall.y + myBall.radius > myCanvas.height){
+						myBall.y = myCanvas.height - myBall.radius;
+						myBall.vy *= bouncing;
+					}
+				}
+				
+				function checkCollision(myBallA, i){
+					for(var j = i + 1; j < numBalls; j++){
+						var myBallB = myBalls[j];
+						var dx = myBallB.x - myBallA.x,
+							dy = myBallB.y - myBallA.y,
+							dist = Math.sqrt(dx * dx + dy * dy),
+							min_dist = myBallA.radius + myBallB.radius;
+						
+						if(dist < min_dist){
+							var angle = Math.atan2(dy, dx),
+								tx = myBallA.x + Math.cos(angle) * min_dist,
+								ty = myBallA.y + Math.sin(angle) * min_dist,
+								ax = (tx - myBallB.x) * spring * 0.5,
+								ay = (ty - myBallB.y) * spring * 0.5;
+								
+								myBallA.vx -= ax;
+								myBallB.vx += ax;
+								myBallA.vy -= ay;
+								myBallB.vy += ay;
+						}
+					}
+				}
+				
+				function draw(myBall){
+					myBall.draw(myContext);
+				}
+				
+				(function createAnim(){
+					window.requestAnimationFrame(createAnim, myCanvas);
+					myContext.clearRect(0, 0, myCanvas.width, myCanvas.height);
+					
+					myBalls.forEach(checkCollision);
+					myBalls.forEach(move);
+					myBalls.forEach(draw);
+				})();
+			}
+		}
+	</script>
+</head>
+<body>
+<canvas width='600' height='400' id='myCanvas'>
+	<p>No support for canvas!!!</p>
+</canvas>
+</body>
+</html>
